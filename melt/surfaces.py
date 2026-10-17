@@ -128,25 +128,37 @@ class Melt:
         target = v0 * self._rel(gi, year)
         s_toe = self.toe_s + self._retreat_future(year)
         h0 = self.h_now * self._am
-        cap = np.where(self.along > s_toe, self.K * np.sqrt(np.clip(self.along - s_toe, 0, None)), 0.0)
-        cap = np.where(self.has44, cap, np.inf)          # only along the tongue's corridor
-        # cap only near the front: the plastic snout from the new toe (up-glacier it's far above the ice)
-        def vol(a):
-            h = np.clip(h0 - a * self._D, 0, None)
-            h = np.minimum(h, cap)
+        def capped(st):
+            # the plastic snout from the front at st, over the tongue's last 600 m
+            c = np.where(self.along > st, self.K * np.sqrt(np.clip(self.along - st, 0, None)), 0.0)
+            return np.where(self.has44 & (self.along - st < 600), c, np.inf)
+
+        def vol(a, cap):
+            h = np.minimum(np.clip(h0 - a * self._D, 0, None), cap)
             return h, h.sum() * cell
-        lo, hi = 0.0, 2000.0
-        h, v = vol(lo)
+        cap = capped(s_toe)
+        h, v = vol(0.0, cap)
         if v <= target:
-            return h
+            # OGGM's retreat, measured along its own longer flowline, runs past this tongue
+            # late in the century; where front and volume disagree, keep the volume and pull
+            # the front back only as far as that allows
+            lo, hi = self.toe_s, s_toe
+            for _ in range(30):
+                mid = (lo + hi) / 2
+                if vol(0.0, capped(mid))[1] > target:
+                    lo = mid
+                else:
+                    hi = mid
+            return vol(0.0, capped(lo))[0]
+        lo, hi = 0.0, 2000.0
         for _ in range(40):
             mid = (lo + hi) / 2
-            h, v = vol(mid)
+            h, v = vol(mid, cap)
             if v > target:
                 lo = mid
             else:
                 hi = mid
-        return vol((lo + hi) / 2)[0]
+        return vol((lo + hi) / 2, cap)[0]
 
     def _retreat_future(self, year):
         gid = self.info["glaciers"][self.ath - 1]["id"]
