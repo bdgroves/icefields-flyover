@@ -83,6 +83,8 @@ class Melt:
         a, b, c, g = (C.HUSS[k] for k in ("a", "b", "c", "g"))
         cell = C.RES ** 2
         for gi in np.unique(self.lab[self.lab > 0]):
+            if gi == self.ath:
+                continue
             m = (self.lab == gi) & (h > 0)
             if not m.any():
                 continue
@@ -108,6 +110,53 @@ class Melt:
                 dv = lost
         return h.astype(np.float32)
 
+    def _athabasca(self, year: int):
+        """The Athabasca's thickness in a future year: its volume and its front both follow
+        OGGM (the front retreats by OGGM's change in glacier length), and between the two
+        the ice thins in Huss et al. (2010)'s pattern, solved for the right volume."""
+        if not hasattr(self, "_D"):
+            a, b, c, g = (C.HUSS[k] for k in ("a", "b", "c", "g"))
+            m = (self.lab == self.ath) & (self.h_now > 0)
+            z = self.dem[m]
+            hr = (z.max() - z) / max(z.max() - z.min(), 1)
+            D = np.zeros_like(self.h_now)
+            D[m] = np.clip((hr + a) ** g + b * (hr + a) + c, 0.02, None)
+            self._D, self._am = D, (self.lab == self.ath)
+        gi = self.ath
+        cell = C.RES ** 2
+        v0 = (self.h_now * self._am).sum() * cell
+        target = v0 * self._rel(gi, year)
+        s_toe = self.toe_s + self._retreat_future(year)
+        h0 = self.h_now * self._am
+        cap = np.where(self.along > s_toe, self.K * np.sqrt(np.clip(self.along - s_toe, 0, None)), 0.0)
+        cap = np.where(self.has44, cap, np.inf)          # only along the tongue's corridor
+        # cap only near the front: the plastic snout from the new toe (up-glacier it's far above the ice)
+        def vol(a):
+            h = np.clip(h0 - a * self._D, 0, None)
+            h = np.minimum(h, cap)
+            return h, h.sum() * cell
+        lo, hi = 0.0, 2000.0
+        h, v = vol(lo)
+        if v <= target:
+            return h
+        for _ in range(40):
+            mid = (lo + hi) / 2
+            h, v = vol(mid)
+            if v > target:
+                lo = mid
+            else:
+                hi = mid
+        return vol((lo + hi) / 2)[0]
+
+    def _retreat_future(self, year):
+        gid = self.info["glaciers"][self.ath - 1]["id"]
+        g = self.info["projections"][self.scenario]["glaciers"].get(gid, {})
+        L = g.get("length_m")
+        if not L:
+            return 0.0
+        y = np.array(self.p_years, float)
+        return max(0.0, float(np.interp(C.TODAY, y, L) - np.interp(year, y, L)))
+
     def _future_h(self, year: int):
         if year not in self._future:
             y0 = max(k for k in self._future if k < year)
@@ -116,7 +165,8 @@ class Melt:
                 h = self._step(h, y)
                 if y % 5 == 0 or y == year:
                     self._future[y] = h
-        return self._future[year]
+        h = self._future[year]
+        return np.where(self.lab == self.ath, self._athabasca(year), h).astype(np.float32)
 
     # ---- past
     def retreat(self, year):

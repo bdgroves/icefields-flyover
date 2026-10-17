@@ -275,9 +275,16 @@ class Scene:
         f_year, f_big, f_mid, f_small = font(int(96 * S)), font(int(44 * S)), font(int(28 * S)), font(int(19 * S), False)
         st = max(2, int(3 * S))
         # peak names
+        hud = [(0, 0, 900 * S, 200 * S), (w - 500 * S, h - 360 * S, w, h)]      # year/phase, chart
         for p, text in self.labels:
             px, py, _ = project(p, self.eye, self.aim, FOV, w, h)
-            if np.isfinite(px[0]) and 0 < px[0] < w and 80 * S < py[0] < h:
+            if not np.isfinite(px[0]):
+                continue
+            tw = d.textlength(text, font=f_mid)
+            x0, x1, ty = px[0] - tw / 2, px[0] + tw / 2, py[0] - 30 * S
+            inside = 20 * S < x0 and x1 < w - 20 * S and 60 * S < ty and py[0] < h
+            clash = any(x1 > a and x0 < c and ty > b - 40 * S and ty - 40 * S < dd for a, b, c, dd in hud)
+            if inside and not clash:
                 d.line([(px[0], py[0] - 4), (px[0], py[0] - 26 * S)], fill=WHITE + (220,), width=max(1, st // 2))
                 d.text((px[0], py[0] - 30 * S), text, font=f_mid, fill=WHITE, anchor="md", stroke_width=st, stroke_fill=HALO)
         # where the front stood: posts at 1844, 1900, 1950, 2000 once passed

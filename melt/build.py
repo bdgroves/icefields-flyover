@@ -173,7 +173,7 @@ def sia_thickness(dem, mask):
 
 
 # -------------------------------------------------------------------- imagery
-def imagery():
+def imagery(dem_for_slope):
     lb = C.BBOX
     q = {"collections": ["sentinel-2-l2a"], "bbox": list(lb), "datetime": "2025-08-10T00:00:00Z/2025-09-30T23:59:59Z",
          "query": {"eo:cloud_cover": {"lt": 15}}, "limit": 50}
@@ -207,7 +207,11 @@ def imagery():
     nir = np.nan_to_num(nir, nan=np.nanmedian(nir))
     ndsi = (rgb[1] - swir) / (rgb[1] + swir + 1e-6)
     # water reads as snow to NDSI; NDWI (green vs near-infrared) picks it out
-    water = ((rgb[1] - nir) / (rgb[1] + nir + 1e-6) > 0.15) & (rgb[1] < 2500)
+    # lakes are flat; mountain shadows aren't
+    gy, gx = np.gradient(ndimage.gaussian_filter(dem_for_slope, 2), C.RES)
+    flat = np.hypot(gx, gy) < 0.08
+    water = ((rgb[1] - nir) / (rgb[1] + nir + 1e-6) > 0.25) & (rgb[1] < 2500) & flat
+    water = ndimage.binary_opening(water, iterations=1)
     ndsi = np.where(water, -1.0, ndsi)
     say(f"open water: {water.sum() * C.RES ** 2 / 1e4:.0f} ha")
     x = np.moveaxis(rgb, 0, -1) / 10000.0
@@ -394,7 +398,7 @@ def projections(gl):
     batches = sorted({(int(i.split(".")[1]) - 1) // 1000 * 1000 for i in ids})
     out = {}
     for ssp in C.SCENARIOS:
-        series = {}
+        series, lengths = {}, {}
         for b0 in batches:
             batch = f"Batch_{b0}_{b0 + 1000}.nc"
             for f in [f for f in files if f"_{ssp}_" in f and f.endswith(batch)]:
@@ -406,9 +410,11 @@ def projections(gl):
                         if not sel:
                             continue
                         v = ds["volume"].sel(rgi_id=sel).load()
+                        ln = ds["length"].sel(rgi_id=sel).load()
                         yrs = [int(t) for t in ds["time"].values]
                         for i in sel:
                             series.setdefault(i, []).append(v.sel(rgi_id=i).values.astype(float))
+                            lengths.setdefault(i, []).append(ln.sel(rgi_id=i).values.astype(float))
                 finally:
                     p.unlink()
         rel = {}
@@ -420,6 +426,8 @@ def projections(gl):
             r = a / np.where(base > 0, base, np.nan)
             rel[i] = {"median": np.nanmedian(r, 0).round(4).tolist(), "min": np.nanmin(r, 0).round(4).tolist(),
                       "max": np.nanmax(r, 0).round(4).tolist(), "n": int(len(runs))}
+            L = np.array([x[:n_t] for x in lengths[i]])
+            rel[i]["length_m"] = np.nanmedian(L, 0).round(1).tolist()       # OGGM flowline length
         out[ssp] = {"years": yrs, "glaciers": rel}
         a = rel.get(C.ATHABASCA)
         if a:
@@ -434,7 +442,7 @@ def main():
     dem = terrain()
     gl, lab, ath_id = glaciers()
     ath_mask = lab == ath_id
-    tex, ndsi = imagery()
+    tex, ndsi = imagery(dem)
     Image.fromarray(tex).save(C.DATA / "texture.png")
     # today's ice: inside an RGI outline, and either snow/ice to Sentinel-2 or well inside the outline
     inside = ndimage.distance_transform_edt(lab > 0) * C.RES
