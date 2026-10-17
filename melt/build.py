@@ -181,6 +181,7 @@ def imagery():
     items.sort(key=lambda f: (f["properties"].get("eo:cloud_cover", 99), -int(f["properties"]["datetime"][5:7])))
     rgb = np.full((3,) + SHAPE, np.nan, np.float32)
     swir = np.full(SHAPE, np.nan, np.float32)
+    nir = np.full(SHAPE, np.nan, np.float32)
     used = []
     for it in items[:8]:
         a = it["assets"]
@@ -188,11 +189,13 @@ def imagery():
         for k in ("red", "green", "blue"):
             bands.append(warp_to_grid("/vsicurl/" + a[k]["href"], Resampling.bilinear, 0))
         sw = warp_to_grid("/vsicurl/" + a["swir16"]["href"], Resampling.bilinear, 0)
+        ni = warp_to_grid("/vsicurl/" + a["nir"]["href"], Resampling.bilinear, 0)
         new = np.isnan(rgb[0]) & (bands[0] > 0)
         if new.any():
             for k in range(3):
                 rgb[k][new] = bands[k][new]
             swir[new] = sw[new]
+            nir[new] = ni[new]
             used.append(it["properties"]["datetime"][:10])
         if not np.isnan(rgb[0]).any():
             break
@@ -201,7 +204,12 @@ def imagery():
     for k in range(3):
         rgb[k] = np.nan_to_num(rgb[k], nan=np.nanmedian(rgb[k]))
     swir = np.nan_to_num(swir, nan=np.nanmedian(swir))
+    nir = np.nan_to_num(nir, nan=np.nanmedian(nir))
     ndsi = (rgb[1] - swir) / (rgb[1] + swir + 1e-6)
+    # water reads as snow to NDSI; NDWI (green vs near-infrared) picks it out
+    water = ((rgb[1] - nir) / (rgb[1] + nir + 1e-6) > 0.15) & (rgb[1] < 2500)
+    ndsi = np.where(water, -1.0, ndsi)
+    say(f"open water: {water.sum() * C.RES ** 2 / 1e4:.0f} ha")
     x = np.moveaxis(rgb, 0, -1) / 10000.0
     lo, hi = np.percentile(x, 1), np.percentile(x, 99.7)
     x = np.clip((x - lo) / (hi - lo), 0, 1) ** (1 / 1.25)
@@ -430,7 +438,7 @@ def main():
     Image.fromarray(tex).save(C.DATA / "texture.png")
     # today's ice: inside an RGI outline, and either snow/ice to Sentinel-2 or well inside the outline
     inside = ndimage.distance_transform_edt(lab > 0) * C.RES
-    ice_now = (lab > 0) & ((ndsi > 0.25) | (inside > 150))
+    ice_now = (lab > 0) & ((ndsi > 0.25) | ((inside > 150) & (ndsi > -0.5)))
     ice_now = ndimage.binary_opening(ice_now, iterations=1)
     lbl, _ = ndimage.label(ice_now)
     sizes = ndimage.sum(ice_now, lbl, range(1, lbl.max() + 1))
@@ -439,7 +447,11 @@ def main():
     if got == 0:
         th = sia_thickness(dem, lab > 0)
         info["thickness_source"] = "shallow-ice estimate from surface slope (consensus files unavailable)"
-    th = np.where(ice_now, ndimage.gaussian_filter(th, 2), 0)
+    # taper the thickness to nothing at today's ice edge, so the bed doesn't step down in a
+    # cliff where the outline ends (the consensus grids end abruptly at their outlines)
+    edge = ndimage.distance_transform_edt(ice_now) * C.RES
+    th = np.where(ice_now, th, 0) * np.clip(edge / 250.0, 0, 1) ** 0.6
+    th = ndimage.gaussian_filter(th, 3) * ice_now
     bed = np.minimum(dem, dem - th)
     vol_ath = float((th * ath_mask).sum() * C.RES ** 2)
     say(f"Athabasca ice today: {vol_ath / 1e9:.2f} km3 in {ath_mask.sum() * C.RES ** 2 / 1e6:.1f} km2 of outline")

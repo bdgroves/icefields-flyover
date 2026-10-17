@@ -17,9 +17,11 @@ BBOX = (-117.37, 52.125, -117.15, 52.255)
 ATHABASCA = "RGI60-02.12441"
 ICEFIELD_CENTRE = (52.2197, -117.2244)     # GeoVistas (Gadd 2011): N52 13.179, W117 13.465, 1,975 m
 LIA_YEAR = 1844                             # Little Ice Age maximum (Gadd 2011)
-EYE_BACK_M = 300                            # camera this far down-valley of the 1844 front...
+EYE_BACK_M = 700                            # camera this far down-valley of the 1844 front...
 
-EYE_UP_M = 150                              # ...and this far above it: a drone over the lookout
+EYE_UP_M = 220                              # ...and this far above it: a drone over the lookout
+AIM_UP_M = 900                              # looking at the tongue this far above today's toe...
+AIM_DOWN_M = 60                             # ...and this far below its surface
 # 1844 thickening above the moraine data: fades from its value at the toe to this many
 # metres, over this distance up-glacier (calibrated against the 1919-79 map loss)
 # At 30 m the terrain can't reliably separate the moraine crests from the valley walls, so the

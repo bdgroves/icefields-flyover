@@ -34,7 +34,7 @@ FPS = 30
 TIMELINE = [(0, 4, 1844, 1844), (4, 34, 1844, C.TODAY), (34, 38, C.TODAY, C.TODAY),
             (38, 63, C.TODAY, 2100), (63, 68, 2100, 2100)]
 CARD_S = 7
-FOV = 46.0
+FOV = 52.0
 ZENITH = np.array([52, 112, 186]) / 255.0
 HORIZON = np.array([200, 218, 232]) / 255.0
 PBR = {"enabled": True, "exposure": 0.95, "msaa": 4, "shadow_technique": "none",
@@ -210,9 +210,9 @@ class Scene:
         r0, c0 = rc[0]
         z0 = float(ndimage.map_coordinates(self.m.dem, [[r0], [c0]], order=1)[0])
         self.eye = np.array([e[0], e[1], max(ground + 25, z0 + C.EYE_UP_M)])
-        k = int(np.argmin(np.abs(s_ - (self.m.toe_s + 1300))))
+        k = int(np.argmin(np.abs(s_ - (self.m.toe_s + C.AIM_UP_M))))
         a = to_xy(*rc[k])
-        self.aim = np.array([a[0], a[1], fl["s_now"][k] - 80])
+        self.aim = np.array([a[0], a[1], fl["s_now"][k] - C.AIM_DOWN_M])
         self.flow = (rc, s_)
         # labels
         from rasterio.warp import transform
@@ -260,6 +260,10 @@ class Scene:
         edge = np.clip(1 - ndimage.distance_transform_edt(ice) * C.RES / 120, 0, 1)[..., None]
         ice_px = ice_px * (1 - 0.25 * edge) + self.till_rgb * 0.25 * edge     # dirtier margins
         till_px = self.till_rgb * (1 + 0.08 * self.noise[..., None])
+        # water the photo shows where ice stood (lakes the glacier has since uncovered)
+        t = self.tex
+        water = ((t[..., 1] > t[..., 0] + 18) & (t[..., 2] > t[..., 0] + 8))[..., None] & ice[..., None]
+        add = np.maximum(add, water * soft[..., None])
         out = out * (1 - add) + ice_px * add
         out = out * (1 - gone) + till_px * gone
         return np.clip(out, 0, 255).astype(np.uint8)
@@ -273,7 +277,7 @@ class Scene:
         # peak names
         for p, text in self.labels:
             px, py, _ = project(p, self.eye, self.aim, FOV, w, h)
-            if np.isfinite(px[0]) and 0 < px[0] < w and 0 < py[0] < h:
+            if np.isfinite(px[0]) and 0 < px[0] < w and 80 * S < py[0] < h:
                 d.line([(px[0], py[0] - 4), (px[0], py[0] - 26 * S)], fill=WHITE + (220,), width=max(1, st // 2))
                 d.text((px[0], py[0] - 30 * S), text, font=f_mid, fill=WHITE, anchor="md", stroke_width=st, stroke_fill=HALO)
         # where the front stood: posts at 1844, 1900, 1950, 2000 once passed
@@ -384,6 +388,11 @@ def render(times, w, h, out_for, lite, scenario=C.SCENARIO, hud=True):
             Image.fromarray(sc.texture(ice)).save(texp)
             if n > 0:
                 viewer.load_terrain(str(tp))
+            if n > 0:      # one photo layer at a time: drop the previous frame's
+                try:
+                    viewer.send_ipc({"cmd": "remove_overlay", "id": n - 1})
+                except Exception as e:
+                    print(f"  remove_overlay: {e!r}")
             viewer.load_overlay("photo", texp, extent=(0.0, 0.0, 1.0, 1.0), z_order=0, preserve_colors=False)
             viewer.send_ipc({"cmd": "set_terrain_sun", "azimuth_deg": float(sun.azimuth),
                              "elevation_deg": float(sun.elevation), "intensity": SUN_INTENSITY})
