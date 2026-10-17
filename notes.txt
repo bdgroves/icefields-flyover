@@ -1,0 +1,13 @@
+= terrain 1517 x 1455 at 10 m from MRDEM 30 m: 1701-3488 m
+= 24 RGI glaciers in the window; Athabasca 16.154 km2 (RGI 6, outline c. 2005)
+= Sentinel-2 ['2025-08-24']: 100.0% covered
+= open water: 47 ha
+= consensus (Farinotti et al. 2019) for 24 of 24 glaciers
+= Athabasca ice today: 1.63 km3 in 16.1 km2 of outline
+= flowline 7.8 km; today's toe 1590 m up-valley from Icefield Centre (Gadd 2011: 'nearly 2 km')
+= 1844 surface from the published moraine height: 104 m above today's toe, fading to 25 m 5 km up-glacier
+= reconstructed tongue (the part that changes): 2.267 km3 in 1844, 1.643 today (28% lost)
+= Athabasca ssp126: 17 models, 2100 volume 37% of 2020 (12-80%)
+= Athabasca ssp245: 14 models, 2100 volume 22% of 2020 (10-62%)
+= Athabasca ssp585: 19 models, 2100 volume 0% of 2020 (0-39%)
+= check: 1919-79 loss 0.309 km3 (maps: 0.234); since 1900 22% lost (reported: over half)
