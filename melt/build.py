@@ -42,8 +42,7 @@ import config as C  # noqa: E402
 http = httpx.Client(timeout=300, follow_redirects=True)
 MRDEM = "https://canelevation-dem.s3.ca-central-1.amazonaws.com/mrdem-30/mrdem-30-dtm.tif"
 RGI_ZIP = "https://cluster.klima.uni-bremen.de/~oggm/rgi/rgi62.zip"
-THICK = ["https://cluster.klima.uni-bremen.de/data/icevol/composite/RGI60-02/{id}_thickness.tif",
-         "https://cluster.klima.uni-bremen.de/~oggm/data/icevol/composite/RGI60-02/{id}_thickness.tif"]
+THICK = ["https://cluster.klima.uni-bremen.de/~fmaussion/icevol/composite/RGI60-02/{id}_thickness.tif"]  # as oggm.shop.bedtopo
 OGGM = ("https://cluster.klima.uni-bremen.de/~oggm/oggm-standard-projections/oggm_v16/2025.6/"
         "w5e5/per_glacier_spinup/CMIP6/2100/RGI02/")
 STAC = "https://earth-search.aws.element84.com/v1/search"
@@ -249,23 +248,28 @@ def moraine_crests(dem, s_now_ice, pr, pc, ss, toe_s):
         ice = ndimage.map_coordinates(s_now_ice.astype(float), [rr, cc], order=0) > 0.5
         mid = len(offs) // 2
         crests = []
+        zs = ndimage.gaussian_filter1d(z, 1.5)
         for side in (-1, 1):
             j = mid
             while 0 < j < len(offs) - 1 and ice[j]:      # walk out of the ice
                 j += side
             start = j
-            best = None
-            zs = ndimage.gaussian_filter1d(z, 2)
-            for jj in range(start + side, start + side * 45, side):
+            best, smax = None, 0.0
+            for jj in range(start + side, start + side * 50, side):
                 if not (1 <= jj < len(offs) - 1) or not ok[jj]:
                     break
-                if zs[jj] >= zs[jj - 1] and zs[jj] >= zs[jj + 1] and zs[jj] > zs[start] + 5:
+                rise = zs[jj] - zs[start]
+                slope = (zs[jj + side] - zs[jj - side]) / (2 * C.RES)      # outward rise per metre
+                smax = max(smax, slope)
+                # a ridge top, or a bench where the outward slope eases to under 40% of its
+                # steepest so far, after climbing at least 15 m: the moraine crest
+                if rise > 15 and (slope <= 0 or slope < 0.4 * smax):
                     best = zs[jj]
                     break
             if best is not None:
                 crests.append(best)
         floor = z[mid]
-        if len(crests) == 2:
+        if crests:
             out.append((ss[i], min(crests), floor))
     return out
 
@@ -299,7 +303,10 @@ def reconstruct_1844(dem, bed, ice_now, ath_mask, gl_lab):
     up = ss > np.nanmax(np.where(np.isfinite(crest), ss, np.nan)) if np.isfinite(crest).any() else ss > toe_s
     fade = np.clip(1 - (ss - toe_s) / C.UP_FADE_M, 0, 1)
     dz = np.where(np.isfinite(crest), crest - zflow, np.nan)
-    dz_toe = np.nanmedian(dz[max(0, toe_i - 20):toe_i + 20]) if np.isfinite(dz).any() else 80.0
+    # with no crests, the east lateral moraine's height above the valley floor near the toe,
+    # about 124 m (Bath Geological Society, 1985), less ~20 m of ice still at today's toe
+    dz_toe = np.nanmedian(dz[max(0, toe_i - 20):toe_i + 20]) if np.isfinite(dz[max(0, toe_i - 20):toe_i + 20]).any() else 104.0
+    info["checks"]["thickening_at_toe_m"] = round(float(dz_toe), 1)
     dz_fill = np.where(np.isfinite(dz), dz, C.UP_MIN_M + (dz_toe - C.UP_MIN_M) * fade)
     s1844 = zflow + np.clip(dz_fill, 0, 250)
     plastic = bflow + K * np.sqrt(np.maximum(ss, 0))           # snout from the 1844 front
@@ -358,8 +365,10 @@ def projections(gl):
                 finally:
                     p.unlink()
         rel = {}
+        n_t = min(len(r) for runs in series.values() for r in runs) if series else 0
+        yrs = yrs[:n_t]
         for i, runs in series.items():
-            a = np.array(runs)
+            a = np.array([r[:n_t] for r in runs])
             base = a[:, yrs.index(2020)][:, None]
             r = a / np.where(base > 0, base, np.nan)
             rel[i] = {"median": np.nanmedian(r, 0).round(4).tolist(), "min": np.nanmin(r, 0).round(4).tolist(),
@@ -413,6 +422,18 @@ def main():
     info.update({"crs": C.CRS, "res": C.RES, "transform": list(T)[:6], "shape": [H, W],
                  "glaciers": [{k: v for k, v in g.items() if k != "geom"} for g in gl],
                  "athabasca_index": ath_id, "volume_now_athabasca_m3": vol_ath, "toe_s": toe_s})
+    (C.DATA / "place.json").write_text(json.dumps(info))
+    # checks against what was measured: Reynolds & Young (1997) estimated 0.234 km3 lost
+    # from 1919 to 1979 from survey maps; the glacier has lost over half its volume in
+    # about 125 years (Parks Canada, via Wikipedia)
+    from surfaces import Melt
+    m = Melt()
+    msk = (m.lab == m.ath) | m.has44
+    v = {y: m.volume(y, msk) for y in (1844, 1900, 1919, 1979, C.TODAY)}
+    info["checks"]["loss_1919_1979_km3"] = round((v[1919] - v[1979]) / 1e9, 3)
+    info["checks"]["volume_km3"] = {y: round(x / 1e9, 3) for y, x in v.items()}
+    say(f"check: 1919-79 loss {(v[1919] - v[1979]) / 1e9:.3f} km3 (maps: 0.234); "
+        f"since 1900 {100 * (1 - v[C.TODAY] / v[1900]):.0f}% lost (reported: over half)")
     (C.DATA / "place.json").write_text(json.dumps(info))
     # a quick look: texture with today's ice edge, the 1844 ice edge and the flowline
     q = Image.fromarray(tex).convert("RGB")
