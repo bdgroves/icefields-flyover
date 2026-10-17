@@ -1,0 +1,300 @@
+[viewer-ipc] Creating window 1280x720
+[viewer-ipc] Window created, waiting for Resumed event
+[viewer-ipc] Received Resumed event
+[viewer-ipc] Initializing Viewer...
+libEGL warning: DRI3 error: Could not get DRI3 device
+libEGL warning: Ensure your X server supports DRI3 to get accelerated rendering
+FORGE3D_VIEWER_ADAPTER name="llvmpipe (LLVM 20.1.2, 256 bits)" vendor=0x10005 device=0x0000 backend=Vulkan device_type=Cpu driver="llvmpipe" driver_info="Mesa 25.2.8-0ubuntu0.24.04.4 (LLVM 20.1.2)"
+[viewer] lit compute WGSL version 2 compiled
+[viewer-ipc] Viewer initialized successfully
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG LoadTerrain] Staging new terrain_viewer
+[terrain] Height range: 1700.7 to 3496.5 (range: 1795.9)
+[terrain] Loaded 1517x1455 DEM, domain: 1700.7..3496.5, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG LoadTerrain] staged terrain_viewer published
+FORGE3D_VIEWER_READY port=33109
+[viewer-ipc] READY message sent, port=33109
+[viewer-debug] entering render loop (first frame)
+[viewer-debug] render gate: gi=true pipe=true cam=true vb=false z=true bgl=true
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[render] terrain_params: min_h=1700.7, h_range=1795.9, width=15170.0, z_scale=1.00
+[render] Expected Y range: 0 to 1795.9
+[render] Camera target: (482185.0, 897.9, -5782225.0)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=0, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png (id=0)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_scene] CSM renderer created, shadow_map_size=2048, has_moment_maps=false
+[terrain_scene] Shadows initialized (moment_maps=false)
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] PBR pipeline initialized
+[terrain] Height AO compute pipeline initialized (758x727)
+[terrain] Sun visibility compute pipeline initialized (758x727)
+[terrain_scene] Shadow depth pipeline initialized (4 cascades)
+[csm_uniforms] cascade_count=0, technique=1, shadow_map_size=2048
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 897.9, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"name": "EPSG", "code": "32611"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1248.3444857837617, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1700.7 to 3495.0 (range: 1794.3)
+[terrain] Loaded 1517x1455 DEM, domain: 1700.7..3495.0, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=0)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=0
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=1, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png (id=1)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 897.1, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"code": "32611", "name": "EPSG"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1248.3444857837617, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1700.7 to 3491.7 (range: 1791.0)
+[terrain] Loaded 1517x1455 DEM, domain: 1700.7..3491.7, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=1)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=1
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=2, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png (id=2)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 895.5, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"name": "EPSG", "code": "32611"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1248.3444857837617, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1700.7 to 3488.2 (range: 1787.5)
+[terrain] Loaded 1517x1455 DEM, domain: 1700.7..3488.2, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=2)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=2
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=3, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png (id=3)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 893.8, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"code": "32611", "name": "EPSG"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1248.3444857837617, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1646.2 to 3488.2 (range: 1842.0)
+[terrain] Loaded 1517x1455 DEM, domain: 1646.2..3488.2, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=3)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=3
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=4, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png (id=4)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 921.0, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"code": "32611", "name": "EPSG"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1302.810916447824, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1646.0 to 3488.2 (range: 1842.2)
+[terrain] Loaded 1517x1455 DEM, domain: 1646.0..3488.2, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=4)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=4
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=5, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png (id=5)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 921.1, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"name": "EPSG", "code": "32611"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1303.0158725025117, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1646.0 to 3488.2 (range: 1842.2)
+[terrain] Loaded 1517x1455 DEM, domain: 1646.0..3488.2, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_0.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=5)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=5
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=6, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_0.png (id=6)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 921.1, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"name": "EPSG", "code": "32611"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1303.0158725025117, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[XYZZY_TERRAIN] LoadTerrain handler entry, path=/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG LoadTerrain] terrain_viewer already exists
+[terrain] Height range: 1646.0 to 3488.2 (range: 1842.2)
+[terrain] Loaded 1517x1455 DEM, domain: 1646.0..3488.2, grid=1455x1455
+[terrain] Loaded: /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/terrain_1.tif
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] Removed layer 'photo' (id=6)
+[overlay] Composite non-zero alpha pixels: 0 / 2207235
+[overlay] Built composite texture 1517x1455 from 0 visible layers
+[overlay] Removed overlay id=6
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] LoadOverlay command received: name='photo' path='/home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png'
+[overlay] terrain_viewer exists, calling add_overlay_image...
+[overlay] Added layer 'photo' (id=7, 1517x1455)
+[overlay] Composite non-zero alpha pixels: 2207235 / 2207235
+[overlay] Built composite texture 1517x1455 from 1 visible layers
+[overlay] Loaded 'photo' from /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/tex_1.png (id=7)
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[overlay] preserve_colors=false
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Sun: az=115.5° el=33.2° int=0.75
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain_pbr] updated: PBR: ON | shadow=none res=2048 | IBL=1.00 rot=0.0 exp=0.95 | msaa=4 normal=1.00 | height_ao=ON dirs=6 steps=16 | sun_vis=soft samples=4 steps=24 | tonemap=aces
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] phi=135.0 theta=45.0 radius=22755 fov=55.0 target=(482185.0, 921.1, -5782225.0) | sun_az=115.5 sun_el=33.2 intensity=0.75 ambient=0.42 source=manual_angles | zscale=1.00 shadow=0.50 | origin=(474600.000000,-5789500.000000) span=(15170.000000,14550.000000) fallback=false crs=Some({"code": "32611", "name": "EPSG"}) transform=Some((10.0, 0.0, 474600.0, 0.0, -10.0, 5789500.0))
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[terrain] Camera: phi=-79.7° theta=70.2° r=600.0 fov=52.0° target=Some([483783.15677824954, 1303.0158725025117, -5785708.014408607])
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=true, terrain_snap_size=Some((1280, 720))
+[DEBUG render_to_texture ENTRY] 1280x720
+[DEBUG render_to_texture] overlay_params: enabled=1, opacity=1, blend=0, solid=1
+Saved snapshot to /home/runner/work/icefields-flyover/icefields-flyover/melt/out/_work/_frame.png
+[DEBUG main_loop] terrain_viewer path, has_terrain=true, snapshot_request=false, terrain_snap_size=None
