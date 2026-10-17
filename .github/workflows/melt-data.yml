@@ -1,0 +1,33 @@
+name: Melt data
+
+# Builds the Athabasca melt film's data (terrain, imagery, outlines, ice thickness,
+# the 1844 reconstruction and OGGM projections) and publishes it to the melt-data branch.
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q httpx shapely pyshp pyproj xarray netCDF4 numpy scipy rasterio pillow scikit-image
+      - name: Build
+        run: |
+          set -o pipefail
+          python melt/build.py | tee build.log
+          grep '^= ' build.log > notes.txt || true
+          head -c 60000 notes.txt | sed 's/^= /::notice::/' | head -10
+      - name: Publish to the melt-data branch
+        env: {GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
+        run: |
+          mkdir -p /tmp/m && cd /tmp/m && git init -q -b melt-data
+          cp "$GITHUB_WORKSPACE"/melt/data/* . && cp "$GITHUB_WORKSPACE"/notes.txt .
+          git config user.name "icefields bot"; git config user.email "actions@github.com"
+          git add -A && git commit -q -m "melt data (${GITHUB_SHA::7}, run ${GITHUB_RUN_ID})"
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" melt-data
+          ls -la

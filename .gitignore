@@ -3,3 +3,6 @@ out/
 .pixi/
 __pycache__/
 *.part*
+melt/data/
+melt/out/
+__pycache__/
