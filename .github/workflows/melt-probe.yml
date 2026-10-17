@@ -1,0 +1,29 @@
+name: Melt probe
+
+# What data exists for the Athabasca Glacier melt film: Canada's lidar terrain,
+# the glacier's RGI outline, and OGGM's per-glacier projections to 2100.
+# Findings come back as annotations and are committed to melt/probe.json.
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q httpx shapely pyshp xarray netCDF4 numpy
+      - name: Probe
+        run: |
+          python melt/probe.py | tee probe.log
+          grep '^= ' probe.log | sed 's/^= /::notice::/' || true
+      - name: Commit the findings
+        run: |
+          git config user.name "icefields bot"; git config user.email "actions@github.com"
+          git add melt/probe.json
+          git commit -m "melt: data probe" || exit 0
+          git pull --rebase -q && git push -q
