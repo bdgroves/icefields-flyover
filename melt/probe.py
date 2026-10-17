@@ -48,6 +48,34 @@ def hrdem():
             say(f"{cid}: {len(feats)} items over the glacier" +
                 (f" e.g. {feats[0]['id']} ({found[cid][0]['datetime']}) assets {list(feats[0]['assets'])}" if feats else ""))
         res["hrdem"] = found
+        import numpy as np
+        import rasterio
+        from rasterio.warp import transform_bounds
+        from rasterio.windows import from_bounds
+        res["hrdem_check"] = {}
+        for cid in ("hrdem-mosaic-1m", "hrdem-mosaic-2m", "mrdem-30"):
+            for it in found.get(cid, []):
+                url = it["assets"].get("dtm")
+                if not url:
+                    continue
+                with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"), rasterio.open("/vsicurl/" + url) as src:
+                    l, b_, r_, t = transform_bounds("EPSG:4326", src.crs, *BBOX)
+                    win = from_bounds(l, b_, r_, t, src.transform)
+                    step = max(1, int(round(10 / src.res[0])))          # sample on a ~10 m grid
+                    ov = src.read(1, window=win, out_shape=(int(win.height // step), int(win.width // step)),
+                                  masked=True)
+                    valid = float((~ov.mask).mean()) if np.ma.isMaskedArray(ov) else 1.0
+                    info = {"crs": str(src.crs), "res": src.res, "valid_fraction": round(valid, 3),
+                            "zmin": float(ov.min()) if valid else None, "zmax": float(ov.max()) if valid else None}
+                    # the Athabasca tongue and Icefield Centre specifically
+                    for nm, (lon, lat) in (("tongue", TONGUE), ("centre", ICEFIELD_CENTRE)):
+                        from rasterio.warp import transform as tf
+                        x, y = tf("EPSG:4326", src.crs, [lon], [lat])
+                        v = list(src.sample([(x[0], y[0])], masked=True))[0]
+                        info[nm] = None if np.ma.is_masked(v[0]) else float(v[0])
+                    res["hrdem_check"][cid] = info
+                    say(f"{cid} DTM over the glacier: {src.res[0]:g} m, {100 * valid:.0f}% has data, "
+                        f"tongue {info['tongue']}, Icefield Centre {info['centre']}")
     except Exception as e:
         say(f"HRDEM STAC failed: {e!r}")
 
@@ -55,9 +83,23 @@ def hrdem():
 def rgi():
     from shapely.geometry import Point, shape
     import shapefile  # pyshp
-    for url in ("https://www.glims.org/RGI/rgi60_files/02_rgi60_WesternCanadaUS.zip",):
+    urls = []
+    for base in ("https://cluster.klima.uni-bremen.de/~oggm/rgi/", "https://cluster.klima.uni-bremen.de/~oggm/rgi/RGI62/"):
+        try:
+            html = http.get(base).text
+            links = re.findall(r'href="([^"?]+)"', html)
+            say(f"listing {base}: {[x for x in links if not x.startswith('/')][:40]}")
+            urls += [base + x for x in links if re.search(r"(^|_)02_rgi6\d.*\.zip$", x)]
+        except Exception as e:
+            say(f"listing {base} failed: {e!r}")
+    urls += ["https://cluster.klima.uni-bremen.de/~oggm/rgi/RGIV62/02_rgi62_WesternCanadaUS.zip",
+             "https://cluster.klima.uni-bremen.de/~oggm/rgi/rgi62.zip"]
+    for url in urls:
         try:
             z = zipfile.ZipFile(io.BytesIO(http.get(url).content))
+            if not any(n.endswith(".shp") for n in z.namelist()):     # a zip of region zips
+                inner = [n for n in z.namelist() if re.search(r"(^|/)02_rgi6.*\.zip$", n)][0]
+                z = zipfile.ZipFile(io.BytesIO(z.read(inner)))
             shp = [n for n in z.namelist() if n.endswith(".shp")][0]
             base = shp[:-4]
             r = shapefile.Reader(shp=io.BytesIO(z.read(base + ".shp")), dbf=io.BytesIO(z.read(base + ".dbf")),
@@ -78,6 +120,7 @@ def rgi():
                 say(f"RGI {n['id']} {n['name'] or '-'}: {n['area_km2']} km2, {n['zmin']}-{n['zmax']} m, "
                     f"tongue point inside: {n['contains_tongue_point']}")
             res["rgi"] = near
+            say(f"RGI from {url}")
             return
         except Exception as e:
             say(f"RGI from {url} failed: {e!r}")
@@ -88,8 +131,9 @@ def oggm():
     try:
         html = http.get(OGGM).text
         files = sorted(set(re.findall(r'href="(run_hydro[^"]+\.nc)"', html)))
-        say(f"OGGM RGI02 CMIP6/2100: {len(files)} files")
-        gcms = sorted({re.search(r"merged_(.+?)_ssp", f).group(1) for f in files if "_ssp" in f})
+        say(f"OGGM RGI02 CMIP6/2100: {len(files)} files, e.g. {files[:3]}")
+        files = [f for f in files if re.search(r"_ssp\d+_", f)]
+        gcms = sorted({re.search(r"_([A-Za-z0-9.\-]+)_ssp\d+_", f).group(1) for f in files if "_ssp" in f})
         ssps = sorted({re.search(r"_(ssp\d+)_", f).group(1) for f in files if "_ssp" in f})
         say(f"GCMs: {len(gcms)} {gcms[:20]}; scenarios: {ssps}")
         res["oggm"] = {"base": OGGM, "gcms": gcms, "ssps": ssps, "n_files": len(files)}
@@ -100,6 +144,7 @@ def oggm():
         num = int(ath.split(".")[1])
         b0 = (num - 1) // 1000 * 1000
         batch = f"Batch_{b0}_{b0 + 1000}.nc"
+        say(f"Athabasca is {ath}: looking in *{batch}")
         res["oggm"]["athabasca"] = {"rgi_id": ath, "batch": batch, "series": {}}
         for ssp in ("ssp126", "ssp245", "ssp370", "ssp585"):
             fs = [f for f in files if f"_{ssp}_" in f and f.endswith(batch)]
@@ -111,7 +156,7 @@ def oggm():
                     if ath not in ds["rgi_id"].values:
                         continue
                     s = ds.sel(rgi_id=ath)
-                    vols.append({"gcm": re.search(r"merged_(.+?)_ssp", f).group(1),
+                    vols.append({"gcm": re.search(r"_([A-Za-z0-9.\-]+)_ssp\d+_", f).group(1),
                                  "time": [int(t) for t in s["time"].values],
                                  "volume": [float(v) for v in s["volume"].values],
                                  "area": [float(v) for v in s["area"].values],
