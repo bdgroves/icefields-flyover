@@ -422,7 +422,7 @@ def main():
     info.update({"crs": C.CRS, "res": C.RES, "transform": list(T)[:6], "shape": [H, W],
                  "glaciers": [{k: v for k, v in g.items() if k != "geom"} for g in gl],
                  "athabasca_index": ath_id, "volume_now_athabasca_m3": vol_ath, "toe_s": toe_s})
-    (C.DATA / "place.json").write_text(json.dumps(info))
+    (C.DATA / "place.json").write_text(json.dumps(info, default=float))
     # checks against what was measured: Reynolds & Young (1997) estimated 0.234 km3 lost
     # from 1919 to 1979 from survey maps; the glacier has lost over half its volume in
     # about 125 years (Parks Canada, via Wikipedia)
@@ -434,7 +434,7 @@ def main():
     info["checks"]["volume_km3"] = {y: round(x / 1e9, 3) for y, x in v.items()}
     say(f"check: 1919-79 loss {(v[1919] - v[1979]) / 1e9:.3f} km3 (maps: 0.234); "
         f"since 1900 {100 * (1 - v[C.TODAY] / v[1900]):.0f}% lost (reported: over half)")
-    (C.DATA / "place.json").write_text(json.dumps(info))
+    (C.DATA / "place.json").write_text(json.dumps(info, default=float))
     # a quick look: texture with today's ice edge, the 1844 ice edge and the flowline
     q = Image.fromarray(tex).convert("RGB")
     from PIL import ImageDraw
