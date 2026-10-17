@@ -225,10 +225,40 @@ def flowline(dem, ath_mask):
     path, _ = route_through_array(cost, (ar, ac), (br, bc), fully_connected=True, geometric=True)
     p = np.array(path, float) * k + k / 2
     p = np.column_stack([ndimage.gaussian_filter1d(p[:, j], 6, mode="nearest") for j in range(2)])
+    p = recentre(p, dem, ath_mask)
     seg = np.r_[0, np.cumsum(np.hypot(*np.diff(p, axis=0).T))] * C.RES
     ss = np.arange(0, seg[-1], C.RES)
     pr = np.interp(ss, seg, p[:, 0]); pc = np.interp(ss, seg, p[:, 1])
     return np.column_stack([pr, pc]), ss
+
+
+def recentre(p, dem, ice, half_m=900, passes=3):
+    """Move each point to the middle of the glacier across the valley, or to the valley floor
+    where there's no ice (the forefield), then smooth. The cheapest-path line hugs a margin."""
+    zsm = ndimage.gaussian_filter(dem, 3)
+    for _ in range(passes):
+        d = np.gradient(p, axis=0)
+        q = p.copy()
+        offs = np.arange(-half_m, half_m + 1, C.RES) / C.RES
+        for i in range(len(p)):
+            t = d[i] / (np.hypot(*d[i]) + 1e-9)
+            n = np.array([-t[1], t[0]])
+            rr = p[i, 0] + n[0] * offs; cc = p[i, 1] + n[1] * offs
+            ic = ndimage.map_coordinates(ice.astype(float), [rr, cc], order=0, mode="constant") > 0.5
+            if ic.any():
+                lab, _ = ndimage.label(ic)
+                mid = len(offs) // 2
+                js = np.flatnonzero(ic)
+                k = lab[js[np.argmin(np.abs(js - mid))]]          # the ice run nearest the line
+                jj = np.flatnonzero(lab == k)
+                o = offs[(jj.min() + jj.max()) // 2]
+            else:
+                z = ndimage.map_coordinates(zsm, [rr, cc], order=1, mode="nearest")
+                near = np.abs(offs) * C.RES < 350
+                o = offs[near][np.argmin(z[near])]
+            q[i] = p[i] + n * o * 0.7
+        p = np.column_stack([ndimage.gaussian_filter1d(q[:, j], 5, mode="nearest") for j in range(2)])
+    return p
 
 
 def moraine_crests(dem, s_now_ice, pr, pc, ss, toe_s):
@@ -287,7 +317,7 @@ def reconstruct_1844(dem, bed, ice_now, ath_mask, gl_lab):
     s_now = dem  # the DEM surface is today's ice surface on the glacier
     zflow = ndimage.map_coordinates(s_now, [pr, pc], order=1)
     bflow = ndimage.map_coordinates(bed, [pr, pc], order=1)
-    cr = moraine_crests(dem, ice_now & (gl_lab > 0), pr, pc, ss, toe_s)
+    cr = moraine_crests(dem, ice_now & (gl_lab > 0), pr, pc, ss, toe_s) if C.DETECT_MORAINES else []
     K = np.sqrt(2 * C.TAU / (C.RHO * C.G))
     s1844 = zflow.copy()
     if cr:
@@ -298,21 +328,26 @@ def reconstruct_1844(dem, bed, ice_now, ath_mask, gl_lab):
         info["moraine_sections"] = [[round(a), round(b, 1), round(c, 1)] for a, b, c in cr]
     else:
         crest = np.full_like(ss, np.nan)
-        say("no moraine crests found; using the plastic snout only")
+        say(f"1844 surface from the published moraine height: {C.DZ_TOE_M:g} m above today's toe, "
+            f"fading to {C.UP_MIN_M:g} m {C.UP_FADE_M / 1000:g} km up-glacier")
     # above the crest data, the thickening fades to 10 m by 2.5 km above today's toe
     up = ss > np.nanmax(np.where(np.isfinite(crest), ss, np.nan)) if np.isfinite(crest).any() else ss > toe_s
     fade = np.clip(1 - (ss - toe_s) / C.UP_FADE_M, 0, 1)
     dz = np.where(np.isfinite(crest), crest - zflow, np.nan)
     # with no crests, the east lateral moraine's height above the valley floor near the toe,
     # about 124 m (Bath Geological Society, 1985), less ~20 m of ice still at today's toe
-    dz_toe = np.nanmedian(dz[max(0, toe_i - 20):toe_i + 20]) if np.isfinite(dz[max(0, toe_i - 20):toe_i + 20]).any() else 104.0
+    dz_toe = np.nanmedian(dz[max(0, toe_i - 20):toe_i + 20]) if np.isfinite(dz[max(0, toe_i - 20):toe_i + 20]).any() else C.DZ_TOE_M
     info["checks"]["thickening_at_toe_m"] = round(float(dz_toe), 1)
     dz_fill = np.where(np.isfinite(dz), dz, C.UP_MIN_M + (dz_toe - C.UP_MIN_M) * fade)
     s1844 = zflow + np.clip(dz_fill, 0, 250)
     plastic = bflow + K * np.sqrt(np.maximum(ss, 0))           # snout from the 1844 front
-    s1844 = np.minimum(s1844, plastic)
+    # the plastic snout shapes the front: across the forefield and just above today's toe,
+    # blending out over the next 500 m (up-glacier the moraine-based surface stands)
+    wcap = np.clip((toe_s + 800 - ss) / 500, 0, 1)
+    s1844 = np.minimum(s1844, plastic) * wcap + s1844 * (1 - wcap)
     s1844 = np.maximum(s1844, zflow)
     s1844 = ndimage.gaussian_filter1d(s1844, 8, mode="nearest")
+    s1844 = np.minimum(s1844, bflow + K * np.sqrt(np.maximum(ss, 0)) * (ss < toe_s) + 1e4 * (ss >= toe_s))
     # spread across the valley: every cell near the flowline takes the surface of its
     # nearest flowline point; ice where that is above the ground, joined to the flowline
     from scipy.spatial import cKDTree
@@ -321,11 +356,15 @@ def reconstruct_1844(dem, bed, ice_now, ath_mask, gl_lab):
     dist, j = tree.query(np.column_stack([rr.ravel(), cc.ravel()]), workers=-1)
     dist = dist.reshape(SHAPE) * C.RES
     j = j.reshape(SHAPE)
-    along = ss[j].astype(np.float32)
+    # a rounded snout: distance back from the front, less a parabola across the valley
+    # (radius SNOUT_R_M), so the plastic thickness cap draws a lobe, not a straight edge
+    along = (ss[j] - dist ** 2 / (2 * C.SNOUT_R_M)).astype(np.float32)
     s_field = s1844[j]
     ground = np.where(ice_now & (gl_lab > 0), bed, dem)
-    corridor = (dist < 1000) & (along < toe_s + C.UP_FADE_M + 1000)
-    ice44 = corridor & (s_field > ground + 1)
+    # cells whose nearest flowline point is the very first one lie beyond the 1844 front
+    corridor = (dist < 1000) & (ss[j] < toe_s + C.UP_FADE_M + 1000) & (j > 2)
+    s_field = np.where(ss[j] < toe_s, np.minimum(s_field, ground + K * np.sqrt(np.clip(along, 0, None))), s_field)
+    ice44 = corridor & (s_field > ground + 1) & (along > 0)
     lab, _ = ndimage.label(ice44)
     keep = set(np.unique(lab[np.round(pr).astype(int).clip(0, H - 1), np.round(pc).astype(int).clip(0, W - 1)])) - {0}
     ice44 = np.isin(lab, list(keep))

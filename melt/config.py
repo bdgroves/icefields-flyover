@@ -17,10 +17,17 @@ BBOX = (-117.37, 52.125, -117.15, 52.255)
 ATHABASCA = "RGI60-02.12441"
 ICEFIELD_CENTRE = (52.2197, -117.2244)     # GeoVistas (Gadd 2011): N52 13.179, W117 13.465, 1,975 m
 LIA_YEAR = 1844                             # Little Ice Age maximum (Gadd 2011)
-EYE_BACK_M = 200                            # camera this far down-valley of Icefield Centre...
-EYE_UP_M = 70                               # ...and this far above it
+EYE_BACK_M = 300                            # camera this far down-valley of the 1844 front...
+
+EYE_UP_M = 150                              # ...and this far above it: a drone over the lookout
 # 1844 thickening above the moraine data: fades from its value at the toe to this many
 # metres, over this distance up-glacier (calibrated against the 1919-79 map loss)
+# At 30 m the terrain can't reliably separate the moraine crests from the valley walls, so the
+# 1844 surface uses the published height instead: the east lateral moraine stands about 124 m
+# above the valley floor near the toe (Bath Geological Society, 1985), and today's toe is
+# roughly 20 m above the floor, so about 104 m more ice at today's toe in 1844.
+DETECT_MORAINES = False
+DZ_TOE_M = 104.0
 UP_MIN_M = 25.0
 UP_FADE_M = 5000.0
 
@@ -43,6 +50,7 @@ SCENARIO_NAMES = {"ssp126": "SSP1-2.6 (low emissions)", "ssp245": "SSP2-4.5 (mid
 HUSS = dict(a=-0.02, b=0.12, c=0.0, g=6.0)
 # Perfectly plastic ice (Nye): a snout's thickness grows as sqrt(2 tau x / (rho g)).
 TAU, RHO, G = 100e3, 900.0, 9.81
+SNOUT_R_M = 450.0           # how rounded the snout is, seen from above
 
 # Morning light from the east-south-east on 20 August, 10:30 a.m. MDT, so the glacier,
 # which faces north-east toward the lookout, is lit from the front.
