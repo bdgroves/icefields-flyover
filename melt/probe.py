@@ -84,7 +84,8 @@ def rgi():
     from shapely.geometry import Point, shape
     import shapefile  # pyshp
     urls = []
-    for base in ("https://cluster.klima.uni-bremen.de/~oggm/rgi/", "https://cluster.klima.uni-bremen.de/~oggm/rgi/RGI62/"):
+    for base in ("https://cluster.klima.uni-bremen.de/~oggm/rgi/rgi62/",
+                 "https://cluster.klima.uni-bremen.de/~oggm/rgi/rgi62/00_rgi62/"):
         try:
             html = http.get(base).text
             links = re.findall(r'href="([^"?]+)"', html)
@@ -176,8 +177,11 @@ def oggm():
         say(f"OGGM failed: {e!r}")
 
 
-hrdem()
-rgi()
-oggm()
+import traceback
+for step in (rgi, oggm):
+    try:
+        step()
+    except Exception:
+        say(f"{step.__name__} crashed: " + traceback.format_exc().replace(chr(10), " | ")[-900:])
 OUT.write_text(json.dumps(res))
 say(f"wrote {OUT.name}")
