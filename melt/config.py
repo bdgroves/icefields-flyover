@@ -16,13 +16,13 @@ BBOX = (-117.37, 52.125, -117.15, 52.255)
 
 ATHABASCA = "RGI60-02.12441"
 ICEFIELD_CENTRE = (52.2197, -117.2244)     # GeoVistas (Gadd 2011): N52 13.179, W117 13.465, 1,975 m
-LIA_YEAR = 1844
+LIA_YEAR = 1844                             # Little Ice Age maximum (Gadd 2011)
 EYE_BACK_M = 200                            # camera this far down-valley of Icefield Centre...
 EYE_UP_M = 70                               # ...and this far above it
 # 1844 thickening above the moraine data: fades from its value at the toe to this many
 # metres, over this distance up-glacier (calibrated against the 1919-79 map loss)
 UP_MIN_M = 25.0
-UP_FADE_M = 5000.0                             # Little Ice Age maximum (Gadd 2011)
+UP_FADE_M = 5000.0
 
 # How far the toe had retreated from its 1844 position (metres), from:
 #   Gadd (2011): the 1844 front reached where Icefield Centre is now, and the glacier

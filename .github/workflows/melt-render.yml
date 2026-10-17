@@ -1,0 +1,149 @@
+name: Melt render
+
+# Renders the Athabasca melt film with forge3d on GitHub's CPUs (Mesa's software Vulkan
+# under a virtual display), from the melt-data branch.
+#   mode stills : frames for the listed years -> the melt-stills branch
+#   mode film   : the whole film in parallel pieces, plus the scenario end card; a 1080p
+#                 and a 720p MP4 and a poster go to the melt-video branch
+# If pieces fail, run again with that run's ID as reuse_run.
+on:
+  workflow_dispatch:
+    inputs:
+      mode: {description: "stills or film", default: "stills"}
+      years: {description: "Years for stills", default: "1844,1900,1950,1979,2025,2050,2075,2100"}
+      scenario: {description: "Scenario for stills", default: "ssp245"}
+      chunks: {description: "Parallel jobs (film)", default: "40"}
+      size: {description: "Frame size", default: "1920x1080"}
+      reuse_run: {description: "Run ID whose frames to keep (film)", default: ""}
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  PIP: "forge3d==1.42.0 rasterio numpy scipy pillow"
+  APT: mesa-vulkan-drivers libvulkan1 xvfb libx11-xcb1 libxkbcommon-x11-0 libxkbcommon0 libxcursor1 libxi6 libxrandr2 libxcb-xkb1 libxcb-randr0 libxcb-shape0 libxcb-xfixes0 libwayland-client0 libegl1 fonts-dejavu-core
+
+jobs:
+  stills:
+    if: ${{ inputs.mode == 'stills' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v5
+      - run: git fetch -q --depth 1 origin melt-data && mkdir -p melt/data && git archive FETCH_HEAD | tar -x -C melt/data
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq $APT >/dev/null
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q $PIP
+      - name: Stills
+        env: {XDG_RUNTIME_DIR: /tmp}
+        run: |
+          set -o pipefail
+          xvfb-run -a -s "-screen 0 1920x1080x24" python melt/render.py --stills "${{ inputs.years }}" \
+            --scenario ${{ inputs.scenario }} --size ${{ inputs.size }} --lite 2>&1 | tee render.log
+      - name: Push to the melt-stills branch
+        if: always()
+        env: {GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
+        run: |
+          mkdir -p /tmp/s && cd /tmp/s && git init -q -b melt-stills
+          python3 -c "
+          from PIL import Image; from pathlib import Path
+          for p in sorted(Path('$GITHUB_WORKSPACE/melt/out/stills').glob('*.png')):
+              Image.open(p).convert('RGB').save(p.with_suffix('.jpg').name, quality=90)
+          " || true
+          cp "$GITHUB_WORKSPACE/render.log" "$GITHUB_WORKSPACE/melt/out/viewer.log" . 2>/dev/null || true
+          git config user.name "icefields bot"; git config user.email "actions@github.com"
+          git add -A && git commit -q -m "melt stills (run ${GITHUB_RUN_ID})"
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" melt-stills
+
+  plan:
+    if: ${{ inputs.mode == 'film' }}
+    runs-on: ubuntu-latest
+    outputs: {chunks: "${{ steps.c.outputs.list }}"}
+    steps:
+      - id: c
+        run: echo "list=$(python3 -c "print(list(range(int('${{ inputs.chunks }}'))))")" >> "$GITHUB_OUTPUT"
+
+  frames:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix: {chunk: "${{ fromJSON(needs.plan.outputs.chunks) }}"}
+    steps:
+      - uses: actions/checkout@v5
+      - run: git fetch -q --depth 1 origin melt-data && mkdir -p melt/data && git archive FETCH_HEAD | tar -x -C melt/data
+      - name: Frames from an earlier run
+        if: ${{ inputs.reuse_run != '' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: "frames-${{ matrix.chunk }}", path: melt/out/frames, run-id: "${{ inputs.reuse_run }}", github-token: "${{ secrets.GITHUB_TOKEN }}"}
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq $APT >/dev/null
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q $PIP
+      - name: Render this piece
+        env: {XDG_RUNTIME_DIR: /tmp}
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            xvfb-run -a -s "-screen 0 1920x1080x24" python melt/render.py --size ${{ inputs.size }} --lite \
+              --frames-dir melt/out/frames --chunk ${{ matrix.chunk }} --chunks ${{ inputs.chunks }} 2>&1 | tee -a render.log && exit 0
+            sleep $((attempt * 30))
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "frames-${{ matrix.chunk }}", path: melt/out/frames/frame_*.jpg, retention-days: 7, compression-level: 0}
+
+  card:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - run: git fetch -q --depth 1 origin melt-data && mkdir -p melt/data && git archive FETCH_HEAD | tar -x -C melt/data
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq $APT >/dev/null
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q $PIP
+      - env: {XDG_RUNTIME_DIR: /tmp}
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python melt/render.py --card --size ${{ inputs.size }} --lite
+      - uses: actions/upload-artifact@v4
+        with: {name: card, path: melt/out/card.png, retention-days: 7}
+
+  video:
+    needs: [frames, card]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with: {pattern: "frames-*", path: melt/out/frames, merge-multiple: true}
+      - uses: actions/download-artifact@v4
+        with: {name: card, path: melt/out}
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q numpy pillow scipy rasterio && pip install -q --no-deps forge3d==1.42.0
+      - run: python melt/render.py --encode melt/out/frames --out melt/out/athabasca_melt.mp4
+      - name: Web copies and poster
+        run: |
+          cd melt/out
+          f=athabasca_melt.mp4
+          ffmpeg -y -loglevel error -i $f -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p -movflags +faststart -an athabasca-melt-1080.mp4
+          ffmpeg -y -loglevel error -i $f -vf scale=1280:720 -c:v libx264 -preset slow -crf 25 -pix_fmt yuv420p -movflags +faststart -an athabasca-melt.mp4
+          ffmpeg -y -loglevel error -ss 20 -i $f -frames:v 1 -q:v 3 athabasca-melt-poster.jpg
+          ls -la
+      - name: Push to the melt-video branch
+        env: {GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
+        run: |
+          mkdir -p /tmp/v && cd /tmp/v && git init -q -b melt-video
+          cp "$GITHUB_WORKSPACE"/melt/out/athabasca-melt*.mp4 "$GITHUB_WORKSPACE"/melt/out/athabasca-melt-poster.jpg "$GITHUB_WORKSPACE"/melt/out/card.png .
+          git config user.name "icefields bot"; git config user.email "actions@github.com"
+          git add -A && git commit -q -m "melt video (run ${GITHUB_RUN_ID})"
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" melt-video
+      - uses: actions/upload-artifact@v4
+        with: {name: film, path: melt/out/athabasca_melt.mp4, retention-days: 30}

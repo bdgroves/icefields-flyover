@@ -19,9 +19,19 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          python melt/build.py | tee build.log
+          python melt/build.py 2>&1 | tee build.log
           grep '^= ' build.log > notes.txt || true
           head -c 60000 notes.txt | sed 's/^= /::notice::/' | head -10
+      - name: Log to the melt-log branch
+        if: always()
+        env: {GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
+        run: |
+          mkdir -p /tmp/l && cd /tmp/l && git init -q -b melt-log
+          cp "$GITHUB_WORKSPACE"/build.log . 2>/dev/null || echo "no log" > build.log
+          cp "$GITHUB_WORKSPACE"/melt/data/quicklook.png . 2>/dev/null || true
+          git config user.name "icefields bot"; git config user.email "actions@github.com"
+          git add -A && git commit -q -m "melt build log (run ${GITHUB_RUN_ID})"
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" melt-log
       - name: Publish to the melt-data branch
         env: {GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
         run: |
